@@ -1,0 +1,20 @@
+{
+  "name": "simple-chat",
+  "version": "0.0.0",
+  "description": "",
+  "author": "nichampton <nicolasjhampton@gmail.com>",
+  "main": "functions/relay.js",
+  "dependencies": {
+    "lib": "^3.0.2"
+  },
+  "private": true,
+  "stdlib": {
+    "build": "faaslang",
+    "name": "nichampton/simple-chat",
+    "timeout": 10000,
+    "personalize": {
+      "keys": [],
+      "user": []
+    }
+  }
+}
