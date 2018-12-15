@@ -1,9 +1,5 @@
-const lib = require('lib');
-const groups = require('../groups/groups.js');
+const store = require('../utils/index.js');
 
-const users = new Map([
-  ["nichampton", { currentGroup: "online" }]
-]);
 
 /**
 * add
@@ -11,22 +7,19 @@ const users = new Map([
 * @returns {object}
 */
 module.exports.add = async (username) => {
-  const alreadyExists = users.has(username);
+  
+  const users = await store.get("users");
 
-  if (alreadyExists) {
+  if (users.includes(username)) {
     throw "Username already exists"
   }
-
-  const info = {
-    currentGroup: "online"
-  }
-
-  users.set(username, info)
-
-  // everyone joins the online list
-  await groups.join("online", username);
+  console.log(users)
+  const [ userReply, usersReply ] = await Promise.all([
+    store.set("user", username, true),
+    store.set("users", users.push(username)),
+  ]);
   
-  return { user: username, users: Array.from(users.keys()) }
+  return { user: username, users: usersReply }
 };
 
 /**
@@ -35,15 +28,13 @@ module.exports.add = async (username) => {
 * @returns {object}
 */
 module.exports.info = async (username) => {
-  const alreadyExists = users.has(username);
+  const group = await store.get("user", username);
 
-  if (!alreadyExists) {
+  if (!group) {
     throw "User does not exist"
   }
   
-  const info = users.get(username)
-  
-  return { user: username, info: info }
+  return { user: username, info: group }
 };
 
 /**
@@ -53,17 +44,15 @@ module.exports.info = async (username) => {
 * @returns {object}
 */
 module.exports.enter = async (username, group) => {
-  const alreadyExists = users.has(username);
+  const currentGroup = store.get("user", username);
 
-  if (!alreadyExists) {
+  if (!currentGroup) {
     throw "User does not exist"
   }
 
-  const info = users.get(username);
-  info.currentGroup = group;
-  users.set(username, info);
+  await store.set("user", username, group)
 
-  return { user: username, info: info }
+  return { user: username, info: group }
 };
 
 
@@ -75,10 +64,12 @@ module.exports.enter = async (username, group) => {
 * @returns {object}
 */
 module.exports.route = async (verb, username, data="", context) => {
+  console.log(username, data)
   let results;
   
   switch(verb) {
     case "add":
+      console.log("in the add")
       results = await this.add(username);
       break;
     case "info":

@@ -1,8 +1,5 @@
-const lib = require('lib');
-const users = require('../users/users.js');
-const groups = new Map([
-  ["online", []]
-]);
+const store = require('../utils/index.js');
+
 
 /**
 * join
@@ -11,18 +8,27 @@ const groups = new Map([
 * @returns {object}
 */
 module.exports.join = async (group, username) => {
-  const groupExists = groups.has(group);
+  const groups = store.get("groups");
 
-  let grouplist = groupExists ? groups.get(group) : [];
+  let groupUsers = [];
+  let setGroupList = Promise.resolve();
+  
 
-  grouplist = [...grouplist, username]
+  if(groups.includes(group)) {
+    groupUsers = store.get("group", group);
+  } else {
+    setGroupList = store.set("groups", [...groups, group]);
+  }
 
-  // everyone joins the online list
-  const res = await users.enter(username, group);
+  groupUsers = [...groupUsers, username]
 
-  groups.set(group, grouplist)
+  const [groupsReply, groupReply, groupUsersReply] = await Promise.all([
+    setGroupList,
+    store.set("user", username, group),
+    store.set("group", group, groupUsers),
+  ]);
 
-  return { group: group, users: grouplist }
+  return { group: groupReply, users: groupUsersReply }
 };
 
 

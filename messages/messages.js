@@ -11,7 +11,7 @@ const messages = new Map();
 * @returns {object}
 */
 module.exports.send = async (username, message) => {
-  console.log("hello");
+  
   const userInfo = await users.info(username);
   
   const { info: { currentGroup } } = userInfo;
