@@ -34,7 +34,7 @@ module.exports.set = async function(noun, key="", value="") {
         value: value
       })
       break;
-    case "message":
+    case "messages":
       return await kv.set({
         key: `messages:${key}`,
         value: value
@@ -65,8 +65,8 @@ module.exports.get = async function(noun, key="") {
     case "groups":
       return await kv.get({ key: `groups` })
       break;
-    case "message":
-      return await kv.set({ key: `messages:${key}` })
+    case "messages":
+      return await kv.get({ key: `messages:${key}` })
       break;
     default:
       console.log("OOPS");

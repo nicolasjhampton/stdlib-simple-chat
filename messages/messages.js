@@ -1,8 +1,4 @@
-
-const lib = require('lib');
-const users = require('../users/users.js');
-
-const messages = new Map();
+const store = require('../utils/index.js');
 
 /**
 * send
@@ -11,27 +7,25 @@ const messages = new Map();
 * @returns {object}
 */
 module.exports.send = async (username, message) => {
-  
-  const userInfo = await users.info(username);
-  
-  const { info: { currentGroup } } = userInfo;
+  const group = await store.get("user", username);
 
   if(!currentGroup) {
-    throw "User hasn't joined a group yet";
+    throw "User does not exist";
   }
-  
-  let messagelist = messages.get(currentGroup) || [];
-  
-  messagelist = [...messagelist, [username, message]];
 
-  messages.set(currentGroup, messagelist);
+  let messages = await store.get("messages", group);
+  
+  messages = [...messages, [username, message]];
 
+  const res = await store.set("messages", group, messages);
+
+  if(!res.every(x => x)) {
+    throw "communication failure"
+  }
   // need to broadcast message to all users in group here
 
-  return { user: username, group: currentGroup, messages: Array.from(messagelist) }
+  return { username, group, messages }
 };
-
-
 
 /**
 * messages
@@ -45,7 +39,6 @@ module.exports.route = async (verb, username, data) => {
 
   switch(verb) {
     case "send":
-      console.log(verb);
       results = await this.send(username, data);
       break;
     default:

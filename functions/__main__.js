@@ -34,7 +34,7 @@ module.exports = async (username, action="", group="", data="", context) => {
   if(!initialized){
     await init();
   }
-
+  console.log("incoming-->", `${username}, ${action}, ${group}, ${data}`);
   try {
     switch(noun) {
       case "user":

@@ -1,7 +1,5 @@
 const store = require('../utils/index.js');
 
-
-
 /**
 * list
 * @returns {object}
@@ -34,27 +32,38 @@ module.exports.info = async (group) => {
 * @returns {object}
 */
 module.exports.join = async (group, username) => {
-  const groups = store.get("groups");
+  let [ groups, messages ] = await Promise.all([
+    store.get("groups"),
+    store.get("messages", group),
+  ]);
 
-  let groupUsers = [];
+  messages = messages || [];
+
+  let members = [];
   let setGroupList = Promise.resolve();
-  
+  let message = [username, `:::${username}::: has entered the room`];
 
   if(groups.includes(group)) {
-    groupUsers = store.get("group", group);
+    members = await store.get("group", group);
   } else {
     setGroupList = store.set("groups", undefined, [...groups, group]);
   }
 
-  groupUsers = [...groupUsers, username]
+  messages = [...messages, message];
+  members = [...members, username];
 
-  const [groupsReply, groupReply, groupUsersReply] = await Promise.all([
+  const res = await Promise.all([
     setGroupList,
     store.set("user", username, group),
-    store.set("group", group, groupUsers),
+    store.set("group", group, members),
+    store.set("messages", group, messages),
   ]);
 
-  return { group: groupReply, users: groupUsersReply }
+  if(!res.every(x => x)) {
+    throw "communication failure"
+  }
+
+  return { group, members, messages }
 };
 
 

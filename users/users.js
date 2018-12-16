@@ -8,7 +8,7 @@ const DEFAULT_GROUP = "public";
 * @returns {object}
 */
 module.exports.add = async (username) => {
-  let [ users, publicGroup ] = await Promise.all([
+  let [ users, publicMembers ] = await Promise.all([
     store.get("users"),
     store.get("group", DEFAULT_GROUP),
   ]);
@@ -17,21 +17,20 @@ module.exports.add = async (username) => {
     throw "Username already exists"
   }
 
-  users = [...users, username]
-  publicGroup = [...publicGroup, username]
+  users = [...users, username];
+  publicMembers = [...publicMembers, username];
 
-  console.log("users", users);
-  console.log("public group", publicGroup)
-
-  const [ userReply, usersReply, groupsReply ] = await Promise.all([
+  const res = await Promise.all([
     store.set("user", username, DEFAULT_GROUP),
     store.set("users", undefined, users),
-    store.set("group", DEFAULT_GROUP, publicGroup)
+    store.set("group", DEFAULT_GROUP, publicMembers),
   ]);
 
-  const success = userReply && usersReply && groupsReply;
+  if(!res.every(x => x)) {
+    throw "communication failure"
+  }
   
-  return { username, users, publicGroup, success }
+  return { username, users, members: publicMembers }
 };
 
 /**
@@ -40,17 +39,17 @@ module.exports.add = async (username) => {
 * @returns {object}
 */
 module.exports.info = async (username) => {
-  const [ currentGroup, users, groups ] = await Promise.all([
+  const [ group, users, groups ] = await Promise.all([
     store.get("user", username),
     store.get("users"),
     store.get("groups")
   ]);
 
-  if (!currentGroup) {
+  if (!group) {
     throw "User does not exist"
   }
   
-  return { username, currentGroup, users, groups }
+  return { username, group, users, groups }
 };
 
 /**
