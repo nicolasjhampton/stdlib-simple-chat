@@ -6,14 +6,18 @@ const messages = require('../messages/messages.js');
 
 const actionPattern = RegExp(/^([\w]+)\:([\w]+)$/);
 
-(async function() {
+let initialized = false;
+
+async function init() {
+  await store.drop()
   await Promise.all([
-    store.set("user", "nichampton", true),
-    store.set("group", "online", ["nichampton"]),
-    store.set("users", ["nichampton"]),
-    store.set("groups", ["public"]),
+    store.set("user", "nichampton", "public"),
+    store.set("group", "public", ["nichampton"]),
+    store.set("users", undefined, ["nichampton"]),
+    store.set("groups", undefined, ["public"]),
   ]);
-})()
+  initialized = true;
+}
 
 /**
 * A basic chat api
@@ -24,9 +28,12 @@ const actionPattern = RegExp(/^([\w]+)\:([\w]+)$/);
 * @returns {object}
 */
 module.exports = async (username, action="", group="", data="", context) => {
-  console.log("here");
   const [command, verb, noun] = actionPattern.exec(action);
   let response = {};
+
+  if(!initialized){
+    await init();
+  }
 
   try {
     switch(noun) {
@@ -47,6 +54,8 @@ module.exports = async (username, action="", group="", data="", context) => {
   }
 
   response.action = command;
+
+  // response.status = await store.dump();
 
   return response;
   

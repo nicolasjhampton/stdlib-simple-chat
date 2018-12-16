@@ -1,5 +1,6 @@
 const store = require('../utils/index.js');
 
+const DEFAULT_GROUP = "public";
 
 /**
 * add
@@ -7,19 +8,30 @@ const store = require('../utils/index.js');
 * @returns {object}
 */
 module.exports.add = async (username) => {
-  
-  const users = await store.get("users");
+  let [ users, publicGroup ] = await Promise.all([
+    store.get("users"),
+    store.get("group", DEFAULT_GROUP),
+  ]);
 
   if (users.includes(username)) {
     throw "Username already exists"
   }
-  console.log(users)
-  const [ userReply, usersReply ] = await Promise.all([
-    store.set("user", username, true),
-    store.set("users", users.push(username)),
+
+  users = [...users, username]
+  publicGroup = [...publicGroup, username]
+
+  console.log("users", users);
+  console.log("public group", publicGroup)
+
+  const [ userReply, usersReply, groupsReply ] = await Promise.all([
+    store.set("user", username, DEFAULT_GROUP),
+    store.set("users", undefined, users),
+    store.set("group", DEFAULT_GROUP, publicGroup)
   ]);
+
+  const success = userReply && usersReply && groupsReply;
   
-  return { user: username, users: usersReply }
+  return { username, users, publicGroup, success }
 };
 
 /**
@@ -28,33 +40,18 @@ module.exports.add = async (username) => {
 * @returns {object}
 */
 module.exports.info = async (username) => {
-  const group = await store.get("user", username);
-
-  if (!group) {
-    throw "User does not exist"
-  }
-  
-  return { user: username, info: group }
-};
-
-/**
-* enter
-* @param {string} username
-* @param {string} group
-* @returns {object}
-*/
-module.exports.enter = async (username, group) => {
-  const currentGroup = store.get("user", username);
+  const [ currentGroup, users, groups ] = await Promise.all([
+    store.get("user", username),
+    store.get("users"),
+    store.get("groups")
+  ]);
 
   if (!currentGroup) {
     throw "User does not exist"
   }
-
-  await store.set("user", username, group)
-
-  return { user: username, info: group }
+  
+  return { username, currentGroup, users, groups }
 };
-
 
 /**
 * users
@@ -64,19 +61,14 @@ module.exports.enter = async (username, group) => {
 * @returns {object}
 */
 module.exports.route = async (verb, username, data="", context) => {
-  console.log(username, data)
   let results;
   
   switch(verb) {
     case "add":
-      console.log("in the add")
       results = await this.add(username);
       break;
     case "info":
       results = await this.info(username);
-      break;
-    case "enter":
-      results = await this.enter(username, data);
       break;
     default:
       throw "Action not found"

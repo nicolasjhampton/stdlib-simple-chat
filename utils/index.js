@@ -72,3 +72,19 @@ module.exports.get = async function(noun, key="") {
       console.log("OOPS");
   }
 }
+
+/**
+* drop
+* @returns {any}
+*/
+module.exports.drop = async function() {
+  return await kv.tables.truncate({ table: "nichampton" });
+}
+
+/**
+* dump
+* @returns {any}
+*/
+module.exports.dump = async function() {
+  return await kv.entries();
+}
