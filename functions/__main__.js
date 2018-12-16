@@ -28,6 +28,7 @@ async function init() {
 * @returns {object}
 */
 module.exports = async (username, action="", group="", data="", context) => {
+  console.log(context);
   const [command, verb, noun] = actionPattern.exec(action);
   let response = {};
 
