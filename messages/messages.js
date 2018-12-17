@@ -7,24 +7,29 @@ const store = require('../utils/index.js');
 * @returns {object}
 */
 module.exports.send = async (username, message) => {
-  const group = await store.get("user", username);
+  try {
+    const group = await store.get("user", username);
 
-  if(!currentGroup) {
-    throw "User does not exist";
-  }
-
-  let messages = await store.get("messages", group);
+    if(!group) {
+      throw "User does not exist";
+    }
   
-  messages = [...messages, [username, message]];
-
-  const res = await store.set("messages", group, messages);
-
-  if(!res.every(x => x)) {
-    throw "communication failure"
+    let messages = await store.get("messages", group);
+    
+    messages = [...messages, [username, message]];
+  
+    const res = await store.set("messages", group, messages);
+  
+    if(!res) {
+      throw "communication failure"
+    }
+    // need to broadcast message to all users in group here
+  
+    return { username, group, messages }
+  } catch(e) {
+    console.log(e);
   }
-  // need to broadcast message to all users in group here
 
-  return { username, group, messages }
 };
 
 /**

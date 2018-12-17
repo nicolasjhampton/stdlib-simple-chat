@@ -1,6 +1,9 @@
 const lib = require('lib');
 const kv = lib({ token: process.env.STDLIB_LIBRARY_TOKEN }).utils.kv;
 
+let id = 0;
+let messageUpdate = [];
+
 /**
 * set
 * @param {string} noun
@@ -35,6 +38,7 @@ module.exports.set = async function(noun, key="", value="") {
       })
       break;
     case "messages":
+      messageUpdate.push(key);
       return await kv.set({
         key: `messages:${key}`,
         value: value
@@ -88,3 +92,45 @@ module.exports.drop = async function() {
 module.exports.dump = async function() {
   return await kv.entries();
 }
+
+/**
+ * stream
+ * @param {string} group
+ * @returns {object.http}
+ */
+module.exports.listen = async function(group="") {
+  
+
+  let preamble = "data:";
+  let json = JSON.stringify({
+    "time": new Date().toTimeString()
+  });
+
+  const index = messageUpdate.indexOf(group)
+  console.log(group);
+  console.log(messageUpdate);
+  console.log(index);
+
+  if(index !== -1) {
+    console.log("hello dolly!")
+    messageUpdate.splice(index, 1);
+    const messages = await this.get("messages", group);
+    preamble = "event: " + group + "\nid: " + id + "\ndata:";
+    json = JSON.stringify({
+      "group": group,
+      "messages": messages
+    })
+    id++
+  }
+
+  let body = `${preamble}${json}\n\n`;
+
+  return {
+    headers: {
+      "Connection": "keep-alive",
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache"
+    },
+    body: Buffer.from(body)
+  }
+};

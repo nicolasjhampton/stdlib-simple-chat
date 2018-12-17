@@ -59,6 +59,8 @@ module.exports.join = async (group, username) => {
     store.set("messages", group, messages),
   ]);
 
+  console.log(res);
+
   if(!res.every(x => x)) {
     throw "communication failure"
   }

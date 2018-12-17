@@ -1,20 +1,9 @@
-const messages = require('../messages/messages.js');
-
-let id = 0;
+const stream = require('../utils/index.js');
 
 /**
+* @param {string} group
 * @returns {object.http}
 */
-module.exports = async function(context) {
-  let body = `data:{"time": "${new Date().toTimeString()}"}\n\n`;
-  id++;
-
-  return {
-    headers: {
-      "Connection": "keep-alive",
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache"
-    },
-    body: Buffer.from(body)
-  }
-};
+module.exports = async function(group="", context) {
+  return await stream.listen(group);
+}
